@@ -29,7 +29,11 @@ body {
 
 .input-wrapper {
     flex: 1;
-    max-width: 250px;
+    display: flex;
+    padding: 5px;
+    flex-direction: column;
+    justify-content: center;
+    /*max-width: 250px;*/
 }
 
 .input-wrapper label {
@@ -55,11 +59,13 @@ body {
 }
 
 .output {
+    width: 100%;
     margin-top: 10px;
     min-height: 20px;
-    padding: 8px;
     background-color: #f8f9fa;
-    border-radius: 6px;
+    padding: 10px;
+    border: 2px solid #f8f9fa;
+    border-radius: 8px;
     text-align: center;
     font-weight: bold;
     color: #4a90e2;

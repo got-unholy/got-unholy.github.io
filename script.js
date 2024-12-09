@@ -16,15 +16,17 @@ function f(x) {
     return 1 - (100 / (x * 100 + 100));
 }
 
+const maxGraphYValue = 20;
+
 // Generate data points
-const data = Array.from({length: 201}, (_, i) => {
+const data = Array.from({length: maxGraphYValue * 10 + 1}, (_, i) => {
     const x = i / 10;
     return {x, y: f(x)};
 });
 
 // X scale
 const x = d3.scaleLinear()
-    .domain([0, 20])
+    .domain([0, maxGraphYValue])
     .range([0, width]);
 
 // Y scale
@@ -107,12 +109,12 @@ const horizontalEfficiencyTargetLine = svg.append("line")
     .attr("opacity", 0);
 
 // Intersection points
-const intersectionDot = svg.append("circle")
+const efficiencyIntersectionDot = svg.append("circle")
     .attr("r", 6)
     .attr("fill", "red")
     .style("opacity", 0);
 
-const targetIntersectionDot = svg.append("circle")
+const reductionIntersectionDot = svg.append("circle")
     .attr("r", 6)
     .attr("fill", "green")
     .style("opacity", 0);
@@ -125,17 +127,12 @@ const reductionConversionDisplay = document.getElementById('reductionOutput');
 
 function updateEfficiencyChart() {
     const efficiencyInputValue = parseFloat(efficiencyInput.value) / 100;
-    const reductionInputValue = parseFloat(reductionInput.value) / 100;
 
     // Clear previous display
     efficiencyConversionDisplay.textContent = '';
-    reductionConversionDisplay.textContent = '';
     verticalEfficiencyTargetLine.attr("opacity", 0);
     horizontalEfficiencyTargetLine.attr("opacity", 0);
-    intersectionDot.style("opacity", 0);
-    horizontalReductionTargetLine.attr("opacity", 0);
-    verticalReductionTargetLine.attr("opacity", 0);
-    targetIntersectionDot.style("opacity", 0);
+    efficiencyIntersectionDot.style("opacity", 0);
 
     // Handle efficiency input
     if (efficiencyInputValue >= 0 && efficiencyInputValue <= 20) {
@@ -158,108 +155,39 @@ function updateEfficiencyChart() {
             .attr("opacity", 1);
 
         // Update intersection dot
-        intersectionDot
+        efficiencyIntersectionDot
             .attr("cx", x(efficiencyInputValue))
             .attr("cy", y(yValue))
             .style("opacity", 1);
 
         // Update current value display
         efficiencyConversionDisplay.textContent += `Reduction: ${(yValue * 100).toFixed(2)}%`;
-    }
-
-    // Handle target reduction input
-    if (reductionInputValue >= 0 && reductionInputValue <= 1) {
-        // Find the efficiency that results in this reduction
-        const inverseF = (targetY) => {
-            // Solve 1 - (100 / (x*100 + 100)) = targetY
-            return (100 / (1 - targetY) - 100) / 100;
-        };
-
-        const targetEfficiency = inverseF(reductionInputValue);
-
-        if (targetEfficiency >= 0 && targetEfficiency <= 20) {
-            // Update target horizontal line
-            horizontalReductionTargetLine
-                .attr("x1", x(0))
-                .attr("y1", y(reductionInputValue))
-                .attr("x2", x(targetEfficiency))
-                .attr("y2", y(reductionInputValue))
-                .attr("opacity", 1);
-
-            verticalReductionTargetLine
-                .attr("x1", x(targetEfficiency))
-                .attr("y1", y(0))
-                .attr("x2", x(targetEfficiency))
-                .attr("y2", y(reductionInputValue))
-                .attr("opacity", 1);
-
-            // Update target intersection dot
-            targetIntersectionDot
-                .attr("cx", x(targetEfficiency))
-                .attr("cy", y(reductionInputValue))
-                .style("opacity", 1);
-
-            // Update current value display
-            reductionConversionDisplay.textContent += `Efficiency: ${(targetEfficiency * 100).toFixed(2)}%`;
-        }
     }
 }
 
 function updateReductionChart() {
-    const efficiencyInputValue = parseFloat(efficiencyInput.value) / 100;
     const reductionInputValue = parseFloat(reductionInput.value) / 100;
 
     // Clear previous display
-    efficiencyConversionDisplay.textContent = '';
     reductionConversionDisplay.textContent = '';
-    verticalEfficiencyTargetLine.attr("opacity", 0);
-    horizontalEfficiencyTargetLine.attr("opacity", 0);
-    intersectionDot.style("opacity", 0);
+    efficiencyIntersectionDot.style("opacity", 0);
     horizontalReductionTargetLine.attr("opacity", 0);
     verticalReductionTargetLine.attr("opacity", 0);
-    targetIntersectionDot.style("opacity", 0);
-
-    // Handle efficiency input
-    if (efficiencyInputValue >= 0 && efficiencyInputValue <= 20) {
-        const yValue = f(efficiencyInputValue);
-
-        // Update vertical line
-        verticalEfficiencyTargetLine
-            .attr("x1", x(efficiencyInputValue))
-            .attr("y1", height)
-            .attr("x2", x(efficiencyInputValue))
-            .attr("y2", y(yValue))
-            .attr("opacity", 1);
-
-        // Update horizontal line
-        horizontalEfficiencyTargetLine
-            .attr("x1", x(0))
-            .attr("y1", y(yValue))
-            .attr("x2", x(efficiencyInputValue))
-            .attr("y2", y(yValue))
-            .attr("opacity", 1);
-
-        // Update intersection dot
-        intersectionDot
-            .attr("cx", x(efficiencyInputValue))
-            .attr("cy", y(yValue))
-            .style("opacity", 1);
-
-        // Update current value display
-        efficiencyConversionDisplay.textContent += `Reduction: ${(yValue * 100).toFixed(2)}%`;
-    }
+    reductionIntersectionDot.style("opacity", 0);
 
     // Handle target reduction input
     if (reductionInputValue >= 0 && reductionInputValue <= 1) {
         // Find the efficiency that results in this reduction
-        const inverseF = (targetY) => {
+        const reductionToEfficiency = (targetY) => {
             // Solve 1 - (100 / (x*100 + 100)) = targetY
             return (100 / (1 - targetY) - 100) / 100;
         };
 
-        const targetEfficiency = inverseF(reductionInputValue);
+        const targetEfficiency = reductionToEfficiency(reductionInputValue);
 
-        if (targetEfficiency >= 0 && targetEfficiency <= 20) {
+        // TODO are boundaries needed?
+        if (targetEfficiency >= 0 && targetEfficiency <= maxGraphYValue) {
+        // if (targetEfficiency >= 0) {
             // Update target horizontal line
             horizontalReductionTargetLine
                 .attr("x1", x(0))
@@ -276,14 +204,14 @@ function updateReductionChart() {
                 .attr("opacity", 1);
 
             // Update target intersection dot
-            targetIntersectionDot
+            reductionIntersectionDot
                 .attr("cx", x(targetEfficiency))
                 .attr("cy", y(reductionInputValue))
                 .style("opacity", 1);
 
             // Update current value display
-            reductionConversionDisplay.textContent += `Efficiency: ${(targetEfficiency * 100).toFixed(2)}%`;
         }
+        reductionConversionDisplay.textContent += `Efficiency: ${(targetEfficiency * 100).toFixed(2)}%`;
     }
 }
 
